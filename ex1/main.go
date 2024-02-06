@@ -35,6 +35,19 @@ func getCsvReader(filename string) (*csv.Reader, *os.File) {
 	return csvReader, file
 }
 
+func promptQuestion(problem []string) bool {
+	var answer string
+	fmt.Printf("What is %s?: ", problem[0])
+	fmt.Scan(&answer)
+
+	if answer == problem[1] {
+		fmt.Println("CORRECT!")
+		return true
+	}
+	fmt.Println("WRONG!")
+	return false	
+}
+
 func main() {
 	settings := checkFlags()
 	csvReader, file := getCsvReader(settings.file)
@@ -45,8 +58,7 @@ func main() {
 			log.Fatal(fmt.Sprintf("Could not parse csv, %s", settings.file))
 		}
 
-
-		fmt.Printf("%s, answer is: %s\n", problem[0], problem[1])
+		promptQuestion(problem)
 		problem, err = csvReader.Read()
 	}
 
