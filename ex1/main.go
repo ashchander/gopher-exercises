@@ -41,10 +41,8 @@ func promptQuestion(problem []string) bool {
 	fmt.Scan(&answer)
 
 	if answer == problem[1] {
-		fmt.Println("CORRECT!")
 		return true
 	}
-	fmt.Println("WRONG!")
 	return false	
 }
 
@@ -53,13 +51,19 @@ func main() {
 	csvReader, file := getCsvReader(settings.file)
 	defer file.Close()
 
+	correctAnswers := 0
 	for problem, err := csvReader.Read(); problem != nil; {
 		if err != nil {
 			log.Fatal(fmt.Sprintf("Could not parse csv, %s", settings.file))
 		}
 
-		promptQuestion(problem)
+		answer := promptQuestion(problem)
+
+		if answer {
+			correctAnswers++
+		}
 		problem, err = csvReader.Read()
 	}
+	fmt.Printf("You got %d correct.\n", correctAnswers)
 
 }
