@@ -6,17 +6,27 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 )
 
 type Settings struct {
 	file string
+	timer int
 }
 
 func checkFlags() Settings {
 	var csvFlag = flag.String("f", "problems.csv", "CSV file with input problems and answers")
+	var timerFlag = flag.String("t", "30", "How long should the timer be in seconds (default: 30)")
 	flag.Parse()
+	timer, err := strconv.Atoi(*timerFlag)
+
+	if err != nil {
+		log.Fatal("Invalid time value provided")
+	}
+
 	return Settings{
 		file: *csvFlag,
+		timer: timer,
 	}
 }
 
