@@ -7,11 +7,12 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"time"
 )
 
 type Settings struct {
 	file string
-	timer int
+	timer time.Duration
 }
 
 func checkFlags() Settings {
@@ -26,7 +27,7 @@ func checkFlags() Settings {
 
 	return Settings{
 		file: *csvFlag,
-		timer: timer,
+		timer: time.Duration(timer) * time.Second,
 	}
 }
 
@@ -35,8 +36,6 @@ func getCsvReader(filename string) (*csv.Reader, *os.File) {
 	if err != nil {
 		log.Fatal(fmt.Sprintf("Could not open file, %s", filename))
 	}
-	// defer file.Close()
-
 
 	csvReader := csv.NewReader(file)
 	if err != nil {
@@ -56,24 +55,41 @@ func promptQuestion(problem []string) bool {
 	return false	
 }
 
-func main() {
-	settings := checkFlags()
-	csvReader, file := getCsvReader(settings.file)
-	defer file.Close()
-
-	correctAnswers := 0
+func askQuestions(correctAnswers *int, csvReader *csv.Reader, done chan bool) {
 	for problem, err := csvReader.Read(); problem != nil; {
 		if err != nil {
-			log.Fatal(fmt.Sprintf("Could not parse csv, %s", settings.file))
+			log.Fatal("Could not parse csv file")
 		}
 
 		answer := promptQuestion(problem)
 
 		if answer {
-			correctAnswers++
+			*correctAnswers++
 		}
 		problem, err = csvReader.Read()
 	}
-	fmt.Printf("You got %d correct.\n", correctAnswers)
+	done <- true
+}
 
+func main() {
+	var done chan bool
+	settings := checkFlags()
+	csvReader, file := getCsvReader(settings.file)
+	defer file.Close()
+	
+	fmt.Printf("Hit enter, when ready to start")
+	fmt.Scanf("\n")
+
+	correctAnswers := 0
+	done = make(chan bool)
+	go askQuestions(&correctAnswers, csvReader, done)
+
+	go func() {
+		time.Sleep(settings.timer)
+		done <- true
+	}()
+
+	if(<-done) {
+		fmt.Printf("\nYou got %d correct.\n", correctAnswers)
+	}
 }
